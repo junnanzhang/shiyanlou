@@ -1,54 +1,74 @@
-import sys
-import csv
+import getopt, sys, csv
+from configparser import ConfigParser
+from datetime import datetime
 
 class Args(object):
 	"""docstring for Args"""
 	def __init__(self):
 		super(Args, self).__init__()
 		self.args = sys.argv[1:]
-
+		self.opts, self.otherArg = getopt.getopt(self.args, "C:c:d:o:")
+		print(self.opts)
 		self.getConfigFilePath()
 		self.getUserDataPath()
 		self.getTargetFilePath()
+		self.getCity()
+
+	def getCity(self):
+		try:
+			for o, a in self.opts:
+				if o in ("-C"):
+					self.city = a.upper()
+
+		except:
+			print("city error")
 
 	def getConfigFilePath(self):
 		try:
-			cIndex = self.args.index('-c')
-			self.configFilePath = self.args[cIndex + 1]
+			for o, a in self.opts:
+				if o in ("-c"):
+					self.configFilePath = a
+
 		except:
 			print("config file path not exist")
 
 	def getUserDataPath(self):
 		try:
-			dIndex = self.args.index('-d')
-			self.userDataPath = self.args[dIndex + 1]
+			for o, a in self.opts:
+				if o in ("-d"):
+					self.userDataPath = a
 		except:
 			print("user data file path not exist")
 
 	def getTargetFilePath(self):
 		try:
-			oIndex = self.args.index('-o')
-			self.targetFilePath = self.args[oIndex + 1]
+			for o, a in self.opts:
+				if o in ("-o"):
+					self.targetFilePath = a
 		except:
 			print("target file path not exist")
 
 
 class Config(object):
 	"""docstring for Config"""
-	def __init__(self, path):
+	def __init__(self, path, city):
 		super(Config, self).__init__()
+		self._city = city
 		self.config = self._read_config(path)
 
+
 	def  _read_config(self, path):
-		config = {}
-		with open(path) as file:
-			try:
-				for line in file:
-					eachLine = line.strip().split('=')
-					config[eachLine[0].strip()] = eachLine[1].strip()
-			except:
-				print("config data error")
-		return config
+		config = ConfigParser()
+		config.read(path, encoding="UTF-8")
+		itemList = config.items(self._city)
+		configObj = {}
+		try:
+			for line in itemList:
+				configObj[line[0].strip()] = line[1].strip()
+		except:
+			print("config data error")
+		print("config data", configObj)
+		return configObj
 
 
 class UserData(object):
@@ -84,6 +104,7 @@ class IncomeTaxCalculator(object):
 			eachLine.append(format(tax, '.2f'))
 			resultMoney = floatValue - float(tax) - float(feeMoney)
 			eachLine.append(format(resultMoney, '.2f'))
+			eachLine.append(datetime.now())
 			result.append(eachLine)
 		return result
 
@@ -95,14 +116,14 @@ class IncomeTaxCalculator(object):
 	def getFee(self, salary):
 		try:
 			config = self._config
-			jishul = float(config.get('JiShuL'))
-			jishuh = float(config.get('JiShuH'))
-			yanglao = float(config.get('YangLao'))
-			yiliao = float(config.get('YiLiao'))
-			shiye = float(config.get('ShiYe'))
-			gongjijin = float(config.get('GongJiJin'))
-			gongshang = float(config.get('GongShang'))
-			shengyu = float(config.get('ShengYu'))
+			jishul = float(config.get('JiShuL'.lower()))
+			jishuh = float(config.get('JiShuH'.lower()))
+			yanglao = float(config.get('YangLao'.lower()))
+			yiliao = float(config.get('YiLiao'.lower()))
+			shiye = float(config.get('ShiYe'.lower()))
+			gongjijin = float(config.get('GongJiJin'.lower()))
+			gongshang = float(config.get('GongShang'.lower()))
+			shengyu = float(config.get('ShengYu'.lower()))
 			if salary < jishul:
 				salary = jishul
 			elif salary > jishuh:
@@ -139,9 +160,9 @@ class IncomeTaxCalculator(object):
 
 if __name__ == '__main__':
 	currentPath = Args()
-	# print(currentPath.configFilePath, currentPath.targetFilePath, currentPath.userDataPath);
-	configData = Config(currentPath.configFilePath)
-	print(configData.config)
+
+	configData = Config(currentPath.configFilePath, currentPath.city)
+
 	user = UserData(currentPath.userDataPath)
 		
 	IncomeTaxCalculator(user.userdata, currentPath.targetFilePath, configData.config)
