@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+
+{% block content %}
+	<h1>{{fileObj.title}}</h1>
+	<h1>{{fileObj.created_time}}</h1>
+	<h2 id="content">{{fileObj.content}}</h2>
+{% endblock %}
+
+<script type="text/javascript">
+	var content = document.getElementById('content');
+	console.log(content)
+	debugger;
+	var text = content.innerText;
+	console.log(text)
+	var result = text.replace(/\\r\\n/g,'<br/>');
+	content.innerText = result;
+</script>
