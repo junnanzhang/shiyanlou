@@ -1,0 +1,10 @@
+{% extends 'base.html' %}
+
+{% block content %}
+	{% for item in titles %}
+		<h1><a href={{'/files/' + item.id | string }}>{{item.title}}</a></h1>
+		{% for tag in item.tags %}
+			<span style="margin:10px">{{tag.name}}</span>
+		{% endfor%}
+	{% endfor%}
+{% endblock %}
