@@ -7,6 +7,36 @@ def get_rank(user_id):
     client = MongoClient()
     db = client.shiyanlou
     contests = db.contests
+
+    newdict = contests.aggregate([{
+            '$group': {
+                '_id': "$user_id",
+                'score':{'$sum':'$score'},
+                'submit_time': {'$sum': '$submit_time'}
+            }
+        },{
+            '$sort': {
+                'score': -1,
+                'submit_time': 1
+            }
+        }])
+
+    all_dict = {}
+    count = 1
+    for item in newdict:
+        item['rank'] = count
+        count += 1
+        # all_dict[item['_id']
+        all_dict[item['_id']] = item
+
+    if not all_dict.__contains__(user_id):
+        print('NOTFOUND')
+        sys.exit(0)
+        
+    rank = all_dict[user_id]['rank']
+    score = all_dict[user_id]['score']
+    submit_time = all_dict[user_id]['submit_time']
+    '''
     all_dict = {}
     for item in contests.find():
         if all_dict.__contains__(item['user_id']):
@@ -33,6 +63,7 @@ def get_rank(user_id):
     rank = new_dict[user_id]['rank']
     score = new_dict[user_id]['score']
     submit_time = new_dict[user_id]['submit_time']
+    '''
     return rank, score, submit_time
 
 if __name__ == '__main__':
